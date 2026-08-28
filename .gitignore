@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+backend/venv/
+
+# Environment / secrets (commit .env.example, not .env)
+.env
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Backend runtime data
+backend/data/uploads/
+backend/data/bus_sense.db
+
+# AI artifacts (models, training runs, datasets)
+ai/models/
+ai/runs/
+ai/dataset/
+*.pt
+*.onnx
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
