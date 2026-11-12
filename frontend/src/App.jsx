@@ -2,6 +2,7 @@ import React from 'react';
 import { CommandCenterProvider, useCommandCenter } from './context/CommandCenterContext';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
+import AlertDetailModal from './components/AlertDetailModal';
 import DashboardHome from './pages/DashboardHome';
 import AccidentRisk from './pages/AccidentRisk';
 import BusSafety from './pages/BusSafety';
@@ -53,6 +54,7 @@ function MainAppLayout() {
           {renderActivePage()}
         </main>
       </div>
+      <AlertDetailModal />
     </div>
   );
 }

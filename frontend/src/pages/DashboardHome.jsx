@@ -6,7 +6,6 @@ import MultiBusVerification from '../components/MultiBusVerification';
 import CrossEventIntelligence from '../components/CrossEventIntelligence';
 import PriorityAlerts from '../components/PriorityAlerts';
 import HowItWorks from '../components/HowItWorks';
-import AlertDetailModal from '../components/AlertDetailModal';
 import { 
   AlertTriangle, 
   Clock, 
@@ -89,16 +88,18 @@ export default function DashboardHome() {
       </div>
 
       {/* 7-Stage Pipeline Workflow */}
-      <HowItWorks />
+      <div className="dashboard-workflow">
+        <HowItWorks />
+      </div>
 
       {/* Main Core Layout: Live Feed & GIS Map */}
-      <div className="two-column-layout">
+      <div className="two-column-layout dashboard-core-layout">
         <LiveBusFeed />
         <CityMap />
       </div>
 
       {/* KPI Row */}
-      <div className="kpi-grid">
+      <div className="kpi-grid dashboard-kpi-grid">
         {/* KPI 1 */}
         <div className="card kpi-card border-red" onClick={() => setActivePage('Accident Risk')}>
           <div className="kpi-icon-wrapper bg-red-light">
@@ -169,7 +170,7 @@ export default function DashboardHome() {
       </div>
 
       {/* Second Row: Detailed Intelligence Cards */}
-      <div className="four-card-intelligence-grid">
+      <div className="four-card-intelligence-grid dashboard-intel-grid">
         {/* Card 1: Accident Risk Analysis */}
         <div className="card intel-card-detail">
           <div className="card-top border-red-top">
@@ -468,18 +469,15 @@ export default function DashboardHome() {
       </div>
 
       {/* Core Innovation Cross Event & Verification Panels */}
-      <div className="two-column-layout mt-4">
+      <div className="two-column-layout dashboard-secondary-layout mt-4">
         <CrossEventIntelligence />
         <MultiBusVerification />
       </div>
 
       {/* Priority Alerts Queue & Bottom Workflow */}
-      <div className="mt-4">
+      <div className="dashboard-priority mt-4">
         <PriorityAlerts />
       </div>
-
-      {/* Alert Detail Dialog */}
-      <AlertDetailModal />
     </div>
   );
 }

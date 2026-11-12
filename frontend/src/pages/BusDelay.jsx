@@ -1,6 +1,6 @@
 import React from 'react';
 import { useCommandCenter } from '../context/CommandCenterContext';
-import { Clock, AlertCircle, ArrowRight, BarChart3, TrendingUp, HelpCircle } from 'lucide-react';
+import { Clock, BarChart3, HelpCircle } from 'lucide-react';
 
 export default function BusDelay() {
   const { alerts, setSelectedAlert } = useCommandCenter();
@@ -36,7 +36,8 @@ export default function BusDelay() {
             <h3 className="card-title text-orange mb-2">Transit Corridor Travel Spikes</h3>
             <span className="card-subtitle mb-3">Telemetry deviation from historical scheduled durations</span>
 
-            <table className="official-table">
+            <div className="table-scroll">
+              <table className="official-table">
               <thead>
                 <tr>
                   <th>ROUTE ID</th>
@@ -50,16 +51,16 @@ export default function BusDelay() {
               <tbody>
                 {delayedCorridors.map((corr) => (
                   <tr key={corr.route}>
-                    <td className="font-semibold text-orange">Route {corr.route}</td>
-                    <td>{corr.segment}</td>
-                    <td>{corr.expected}</td>
-                    <td>{corr.actual}</td>
-                    <td>
+                    <td className="font-semibold text-orange" data-label="Route">{corr.route}</td>
+                    <td data-label="Segment">{corr.segment}</td>
+                    <td data-label="Expected">{corr.expected}</td>
+                    <td data-label="Actual">{corr.actual}</td>
+                    <td data-label="Delay">
                       <span className={`badge-severity ${corr.status === 'CRITICAL' ? 'badge-red' : corr.status === 'SEVERE' ? 'badge-orange' : 'badge-purple'}`}>
                         {corr.delay}
                       </span>
                     </td>
-                    <td>
+                    <td data-label="Cause">
                       <span className="text-xxs font-medium bg-slate-100 text-slate-700 px-2 py-1 rounded">
                         {corr.cause}
                       </span>
@@ -67,7 +68,8 @@ export default function BusDelay() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
 
           <div className="card mt-4">

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useCommandCenter } from '../context/CommandCenterContext';
-import { Droplet, AlertCircle, ArrowRight, Eye, Calendar, TrendingUp } from 'lucide-react';
+import { Droplet } from 'lucide-react';
 
 export default function Waterlogging() {
   const { alerts, setSelectedAlert } = useCommandCenter();
@@ -36,7 +36,8 @@ export default function Waterlogging() {
             <h3 className="card-title text-blue mb-2">Monitored Inundation Hotspots</h3>
             <span className="card-subtitle mb-3">AI detections matching puddle dimensions and speed telemetry drops</span>
 
-            <table className="official-table">
+            <div className="table-scroll">
+              <table className="official-table">
               <thead>
                 <tr>
                   <th>LOCATION</th>
@@ -51,13 +52,13 @@ export default function Waterlogging() {
               <tbody>
                 {waterloggedLocations.map((loc) => (
                   <tr key={loc.name}>
-                    <td className="font-semibold text-blue">{loc.name}</td>
-                    <td>{loc.detections} scans</td>
-                    <td>{loc.buses} units</td>
-                    <td className="text-red font-semibold">{loc.speedRed}</td>
-                    <td>{loc.delay}</td>
-                    <td>{loc.persistence}</td>
-                    <td>
+                    <td className="font-semibold text-blue" data-label="Location">{loc.name}</td>
+                    <td data-label="Detections">{loc.detections} scans</td>
+                    <td data-label="Buses">{loc.buses} units</td>
+                    <td className="text-red font-semibold" data-label="Speed drop">{loc.speedRed}</td>
+                    <td data-label="Delay">{loc.delay}</td>
+                    <td data-label="Persistence">{loc.persistence}</td>
+                    <td data-label="Severity">
                       <span className={`badge-severity ${loc.severity === 'HIGH' ? 'badge-blue' : 'badge-orange'}`}>
                         {loc.severity}
                       </span>
@@ -65,7 +66,8 @@ export default function Waterlogging() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
 
           <div className="card mt-4">

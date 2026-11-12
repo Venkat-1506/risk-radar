@@ -1,5 +1,5 @@
 import React from 'react';
-import { BarChart3, TrendingUp, Clock, AlertTriangle, ShieldCheck, Droplet } from 'lucide-react';
+import { BarChart3, Clock, AlertTriangle, ShieldCheck, Droplet } from 'lucide-react';
 
 export default function Analytics() {
   return (
