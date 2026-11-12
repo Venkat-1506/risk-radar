@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useCommandCenter } from '../context/CommandCenterContext';
-import * as api from '../services/api';
 import { FileText, Download, Filter, Search, Calendar } from 'lucide-react';
 
 export default function Reports() {
@@ -23,6 +22,10 @@ export default function Reports() {
                           repDetails.toLowerCase().includes(searchLocation.toLowerCase());
     return matchType && matchSeverity && matchLocation;
   });
+
+  const highSeverityCount = filteredReports.filter(rep => rep.severity === 'HIGH').length;
+  const verifiedCount = filteredReports.filter(rep => rep.status === 'VERIFIED').length;
+  const locationCount = new Set(filteredReports.map(rep => rep.location)).size;
 
   const handleDownloadCSV = () => {
     // Generate CSV output string
@@ -145,10 +148,28 @@ export default function Reports() {
         </div>
       </div>
 
+      <div className="reports-summary-strip">
+        <div className="reports-summary-item">
+          <strong>{filteredReports.length}</strong>
+          <span className="rs-label">Matching Records</span>
+        </div>
+        <div className="reports-summary-item is-red">
+          <strong>{highSeverityCount}</strong>
+          <span className="rs-label">High Severity</span>
+        </div>
+        <div className="reports-summary-item is-green">
+          <strong>{verifiedCount}</strong>
+          <span className="rs-label">Verified</span>
+        </div>
+        <div className="reports-summary-item is-purple">
+          <strong>{locationCount}</strong>
+          <span className="rs-label">Locations</span>
+        </div>
+      </div>
+
       {/* Reports Grid */}
       <div className="reports-dossier-grid mt-4">
         {filteredReports.map((rep) => {
-          const type = rep.incident_type || rep.type || 'unknown';
           const busesObserved = rep.buses_observed || rep.busesObserved || 1;
           const busesList = rep.buses_list || rep.busesList || '';
           const recAction = rep.recommended_action || rep.recommendedAction || '';

@@ -28,7 +28,6 @@ export default function DashboardHome() {
     resetSimulation, 
     simulationActive, 
     activeStage,
-    simLogs,
     selectedScenarioKey,
     setSelectedScenarioKey,
     scenarios,
@@ -36,56 +35,66 @@ export default function DashboardHome() {
   } = useCommandCenter();
 
   return (
-    <div className="dashboard-page space-y-4">
+    <div className="dashboard-page">
       {/* Demo Scenario Control Bar */}
-      <div className="card demo-toolbar bg-slate-900 border border-slate-800 p-3 rounded-xl flex flex-wrap items-center justify-between gap-3 shadow-lg">
-        <div className="demo-toolbar-copy flex items-center gap-2">
-          <span className="demo-signal-icon"><Sparkles size={18} /></span>
-          <div>
-            <span className="demo-kicker">PRELOADED CAMERA LAB / LIVE PIPELINE</span>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-white">LIVE AI INCIDENT DETECTION DEMO</h2>
-            <p className="text-[11px] text-slate-400">Select a preloaded camera scenario and run the automated end-to-end detection pipeline.</p>
+      <div className="demo-toolbar">
+        <div className="demo-toolbar-copy">
+          <span className="demo-signal-icon"><Sparkles size={20} /></span>
+          <div className="demo-toolbar-text">
+            <span className="demo-kicker">
+              <span className="demo-live-dot" />
+              PRELOADED CAMERA LAB / LIVE PIPELINE
+            </span>
+            <h2 className="demo-title">LIVE AI INCIDENT DETECTION DEMO</h2>
+            <p className="demo-subtitle">Select a preloaded camera scenario and run the automated end-to-end detection pipeline.</p>
           </div>
         </div>
 
-        <div className="demo-toolbar-actions flex flex-wrap items-center gap-2">
-          <div className="demo-scenario-field relative">
+        <div className="demo-toolbar-actions">
+          <div className="demo-scenario-field">
             <label htmlFor="demo-scenario">SCENARIO</label>
-            <select 
-              id="demo-scenario"
-              className="bg-slate-950 text-white text-xs px-3 py-2 rounded-lg border border-purple-900/60 font-semibold focus:outline-none focus:border-purple-500 cursor-pointer pr-8"
-              value={selectedScenarioKey}
-              onChange={(e) => setSelectedScenarioKey(e.target.value)}
-              disabled={simulationActive}
-            >
-              {Object.values(scenarios).map(sc => (
-                <option key={sc.id} value={sc.id}>{sc.title}</option>
-              ))}
-            </select>
+            <div className="demo-select-wrap">
+              <select
+                id="demo-scenario"
+                value={selectedScenarioKey}
+                onChange={(e) => setSelectedScenarioKey(e.target.value)}
+                disabled={simulationActive}
+              >
+                {Object.values(scenarios).map(sc => (
+                  <option key={sc.id} value={sc.id}>{sc.title}</option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="demo-select-chevron" />
+            </div>
           </div>
 
           <button 
             onClick={() => runFullDemo(selectedScenarioKey)} 
             disabled={simulationActive}
-            className={`btn-sim-start text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-1.5 transition-all shadow-md ${
-              simulationActive 
-                ? 'bg-purple-950 text-purple-400 border border-purple-800 cursor-not-allowed opacity-75' 
-                : 'bg-purple-600 hover:bg-purple-500 text-white border border-purple-400 shadow-purple-900/30'
-            }`}
+            className={`demo-run-btn ${simulationActive ? 'is-running' : ''}`}
           >
             <Play size={14} fill="currentColor" />
-            {simulationActive ? `EXECUTING STAGE 0${activeStage}/07...` : 'RUN AI DEMO'}
+            <span>{simulationActive ? `EXECUTING STAGE 0${activeStage}/07` : 'RUN AI DEMO'}</span>
           </button>
           
           <button 
             onClick={resetSimulation} 
             disabled={simulationActive}
-            className="btn-sim-reset text-xs font-semibold px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1 transition-all"
+            className="demo-reset-btn"
           >
             <RotateCcw size={14} />
-            Reset Demo
+            <span>Reset Demo</span>
           </button>
         </div>
+      </div>
+
+      {/* 7-Stage Pipeline Workflow */}
+      <HowItWorks />
+
+      {/* Main Core Layout: Live Feed & GIS Map */}
+      <div className="two-column-layout">
+        <LiveBusFeed />
+        <CityMap />
       </div>
 
       {/* KPI Row */}
@@ -158,28 +167,6 @@ export default function DashboardHome() {
           </div>
         </div>
       </div>
-
-      {/* Main Core Layout: Live Feed & GIS Map */}
-      <div className="two-column-layout">
-        <LiveBusFeed />
-        <CityMap />
-      </div>
-
-      {/* Simulation Logs Output (Visible when active) */}
-      {simLogs.length > 0 && (
-        <div className="card sim-logs-card">
-          <h4 className="sim-logs-title">Simulation Event Ingestion Stream</h4>
-          <div className="sim-logs-list">
-            {simLogs.map((log, idx) => (
-              <div key={idx} className="sim-log-item">
-                <span className="log-time">[{log.time}]</span>
-                <span className="log-bus">{log.bus}</span>
-                <span className="log-text">{log.log}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Second Row: Detailed Intelligence Cards */}
       <div className="four-card-intelligence-grid">
@@ -489,10 +476,6 @@ export default function DashboardHome() {
       {/* Priority Alerts Queue & Bottom Workflow */}
       <div className="mt-4">
         <PriorityAlerts />
-      </div>
-
-      <div className="mt-4">
-        <HowItWorks />
       </div>
 
       {/* Alert Detail Dialog */}

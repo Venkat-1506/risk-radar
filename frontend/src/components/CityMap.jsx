@@ -131,7 +131,7 @@ function createBigMarkerIcon(type, isScenario = false) {
 }
 
 export default function CityMap() {
-  const { mapMarkers, setSelectedAlert, alerts, selectedScenarioKey, scenarios, activeStage } = useCommandCenter();
+  const { mapMarkers, selectedScenarioKey, scenarios, activeStage } = useCommandCenter();
   const mapContainerRef = useRef(null);
   const mapInstance = useRef(null);
   const markerLayerGroup = useRef(null);
@@ -271,30 +271,28 @@ export default function CityMap() {
   }, [mapMarkers, activeFilter, activeScenario, activeStage]);
 
   return (
-    <div className="card city-map-card bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl">
+    <div className="card city-map-card">
 
-      <div className="map-controls-header flex flex-wrap items-center justify-between mb-3 border-b border-slate-800 pb-2 gap-2">
-        <div>
-          <h3 className="card-title text-base font-bold text-white flex items-center gap-2">
-            Chennai Live GIS Map
-            <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full font-bold">
-              15+ ACTIVE NODES
+      <div className="map-controls-header">
+        <div className="map-heading">
+          <div className="map-title-row">
+            <h3 className="map-title">Chennai Live GIS Map</h3>
+            <span className="map-node-badge">
+              <span className="map-node-dot"></span>
+              15+ Active Nodes
             </span>
-          </h3>
-          <span className="card-subtitle text-xs text-slate-400">
+          </div>
+          <span className="map-subtitle">
             Real-Time Transport Corridor Intelligence (OpenStreetMap)
           </span>
         </div>
 
-        <div className="map-filter-chips flex flex-wrap items-center gap-1">
+        <div className="map-filter-chips">
           {filters.map(filter => (
             <button
               key={filter.value}
               onClick={() => setActiveFilter(filter.value)}
-              className={`filter-chip text-[11px] px-2.5 py-1 rounded-md font-semibold transition-all ${activeFilter === filter.value
-                  ? 'bg-purple-600 text-white shadow-md shadow-purple-900/30'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'
-                }`}
+              className={`filter-chip ${activeFilter === filter.value ? 'active' : ''}`}
             >
               {filter.label}
             </button>
@@ -302,16 +300,19 @@ export default function CityMap() {
         </div>
       </div>
 
-      <div className="leaflet-map-wrapper relative rounded-lg overflow-hidden border border-slate-800">
+      <div className="leaflet-map-wrapper">
         <div ref={mapContainerRef} className="leaflet-map-element" style={{ height: '360px', width: '100%' }}></div>
 
         {/* Visual Map Legend */}
-        <div className="map-legend-overlay absolute bottom-3 left-3 bg-slate-950/95 border border-slate-800 p-2 rounded-lg text-[11px] flex flex-wrap gap-3 text-slate-300 z-[1000] shadow-2xl">
-          <div className="legend-item flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-red-500 border border-red-300"></span> Accident</div>
-          <div className="legend-item flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-sky-500 border border-sky-300"></span> Waterlog</div>
-          <div className="legend-item flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-500 border border-amber-300"></span> Pothole</div>
-          <div className="legend-item flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-purple-500 border border-purple-300"></span> Pedestrian</div>
-          <div className="legend-item flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-emerald-500 border border-emerald-300"></span> MTC Bus</div>
+        <div className="map-legend-overlay">
+          <span className="map-legend-title">Map Legend</span>
+          <div className="map-legend-items">
+            <span className="legend-item"><span className="map-legend-dot is-accident"></span> Accident</span>
+            <span className="legend-item"><span className="map-legend-dot is-waterlog"></span> Waterlog</span>
+            <span className="legend-item"><span className="map-legend-dot is-pothole"></span> Pothole</span>
+            <span className="legend-item"><span className="map-legend-dot is-pedestrian"></span> Pedestrian</span>
+            <span className="legend-item"><span className="map-legend-dot is-bus"></span> MTC Bus</span>
+          </div>
         </div>
       </div>
     </div>

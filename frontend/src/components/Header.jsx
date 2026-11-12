@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, User } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export default function Header() {
   const [time, setTime] = useState(new Date());
@@ -60,11 +60,6 @@ export default function Header() {
           <span className="mtc-label">MTC Control Center</span>
           <span className="mtc-sub">Chennai City</span>
         </div>
-
-        <button className="icon-btn" aria-label="Notifications">
-          <Bell size={18} />
-          <span className="badge-dot"></span>
-        </button>
 
         <div className="user-profile">
           <div className="avatar-circle">

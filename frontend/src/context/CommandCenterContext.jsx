@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import * as api from '../services/api';
 
 const CommandCenterContext = createContext();
@@ -82,9 +82,185 @@ export const SCENARIOS = {
   }
 };
 
+// Curated mock observations keep the intelligence surfaces populated when the
+// FastAPI database is empty (fresh install, demo reset, or offline preview).
+const MOCK_ALERTS = [
+  {
+    id: 'ALT-2608-001',
+    incident_type: 'accident',
+    type: 'accident',
+    severity: 'HIGH',
+    title: 'Multi-Vehicle Collision — Guindy Flyover',
+    location: 'Guindy Junction, Chennai',
+    time: '08:42 AM',
+    confidence: 96.4,
+    buses_observed: 5,
+    buses_list: 'BUS-101,BUS-205,BUS-310,BUS-402,BUS-501',
+    impact: '+17 min delay across Routes 21G and 570',
+    recommended_action: 'Dispatch traffic police and emergency tow unit; reroute 21G via Inner Ring Road.',
+    latitude: 13.0067,
+    longitude: 80.2206,
+    status: 'VERIFIED',
+    details: 'Two cars and a cargo van collided on the Guindy flyover service lane, blocking the right bus lane.',
+    first_seen: '08:31 AM',
+    last_seen: '08:42 AM'
+  },
+  {
+    id: 'ALT-2608-002',
+    incident_type: 'accident',
+    type: 'accident',
+    severity: 'HIGH',
+    title: 'Overturned Cargo Vehicle — Koyambedu',
+    location: 'Koyambedu Roundabout, Chennai',
+    time: '09:15 AM',
+    confidence: 94.8,
+    buses_observed: 4,
+    buses_list: 'BUS-310,BUS-305,BUS-401,BUS-208',
+    impact: '+19 min delay on Route 91 and 70 corridor',
+    recommended_action: 'Deploy recovery crane and divert Route 91 services through Inner Ring Road.',
+    latitude: 13.0694,
+    longitude: 80.2030,
+    status: 'VERIFIED',
+    details: 'Overturned cargo vehicle restricting two lanes near the Koyambedu metro interchange.',
+    first_seen: '09:02 AM',
+    last_seen: '09:15 AM'
+  },
+  {
+    id: 'ALT-2608-003',
+    incident_type: 'waterlogging',
+    type: 'waterlogging',
+    severity: 'HIGH',
+    title: 'Severe Waterlogging — Tambaram Main Road',
+    location: 'Tambaram Main Road, Chennai',
+    time: '09:44 AM',
+    confidence: 94.2,
+    buses_observed: 4,
+    buses_list: 'BUS-204,BUS-205,BUS-310,BUS-208',
+    impact: '+11 min delay; 8 buses affected on Route 21G',
+    recommended_action: 'Dispatch drainage maintenance team and issue automated MTC rerouting alert.',
+    latitude: 12.9229,
+    longitude: 80.1275,
+    status: 'VERIFIED',
+    details: '30cm standing water covering the bus lane near Tambaram Sanatorium junction.',
+    first_seen: '09:31 AM',
+    last_seen: '09:44 AM'
+  },
+  {
+    id: 'ALT-2608-004',
+    incident_type: 'delay',
+    type: 'delay',
+    severity: 'MEDIUM',
+    title: 'Peak Commercial Congestion — T. Nagar',
+    location: 'T. Nagar Pondy Bazaar, Chennai',
+    time: '10:02 AM',
+    confidence: 91.0,
+    buses_observed: 3,
+    buses_list: 'BUS-105,BUS-312,BUS-501',
+    impact: 'Average delay +14 min on Route 19',
+    recommended_action: 'Activate signal priority at Pondy Bazaar and alert depot control for headway adjustment.',
+    latitude: 13.0405,
+    longitude: 80.2337,
+    status: 'CORROBORATED',
+    details: 'Peak commercial traffic and double parking have slowed bus movement through Pondy Bazaar.',
+    first_seen: '09:48 AM',
+    last_seen: '10:02 AM'
+  },
+  {
+    id: 'ALT-2608-005',
+    incident_type: 'safety',
+    type: 'safety',
+    severity: 'HIGH',
+    title: 'Pedestrian Jaywalking — Adyar Lattice Bridge',
+    location: 'Adyar Lattice Bridge, Chennai',
+    time: '10:18 AM',
+    confidence: 92.4,
+    buses_observed: 3,
+    buses_list: 'BUS-102,BUS-204,BUS-101',
+    impact: 'Unregulated pedestrian movement across high-speed bus lane',
+    recommended_action: 'Adjust signal timing and activate pedestrian warning beacons at the bridge approach.',
+    latitude: 13.0012,
+    longitude: 80.2565,
+    status: 'VERIFIED',
+    details: 'Multiple pedestrians observed crossing the high-speed corridor outside the marked crossing.',
+    first_seen: '10:06 AM',
+    last_seen: '10:18 AM'
+  },
+  {
+    id: 'ALT-2608-006',
+    incident_type: 'safety',
+    type: 'safety',
+    severity: 'MEDIUM',
+    title: 'Overcrowding Alert — Velachery MRTS',
+    location: 'Velachery MRTS Highway, Chennai',
+    time: '10:35 AM',
+    confidence: 88.7,
+    buses_observed: 2,
+    buses_list: 'BUS-402,BUS-208',
+    impact: 'Occupancy at 131% of rated capacity',
+    recommended_action: 'Dispatch a standby bus to the Velachery corridor and notify depot scheduling.',
+    latitude: 12.9780,
+    longitude: 80.2180,
+    status: 'CORROBORATED',
+    details: 'Edge density model flags sustained overcrowding on the Velachery MRTS corridor.',
+    first_seen: '10:22 AM',
+    last_seen: '10:35 AM'
+  },
+  {
+    id: 'ALT-2608-007',
+    incident_type: 'pothole',
+    type: 'pothole',
+    severity: 'MEDIUM',
+    title: 'Road Surface Trenching — Porur Junction',
+    location: 'Porur Junction, Mount-Poonamallee Road',
+    time: '10:51 AM',
+    confidence: 87.6,
+    buses_observed: 2,
+    buses_list: 'BUS-305,BUS-310',
+    impact: 'Vehicles forced to slow below 20 km/h near metro construction zone',
+    recommended_action: 'Raise an asphalt repair request with Chennai Corporation and place warning cones.',
+    latitude: 13.0350,
+    longitude: 80.1580,
+    status: 'OBSERVED',
+    details: 'Deep surface trenching near the metro construction zone is forcing buses to swerve.',
+    first_seen: '10:39 AM',
+    last_seen: '10:51 AM'
+  }
+];
+
+const normalizeAlert = (alert) => {
+  const busesList = Array.isArray(alert.busesList)
+    ? alert.busesList
+    : typeof alert.buses_list === 'string'
+      ? alert.buses_list.split(',').map(bus => bus.trim()).filter(Boolean)
+      : [];
+  const busesObserved = alert.buses_observed ?? alert.busesObserved ?? busesList.length ?? 1;
+  const recommendedAction = alert.recommended_action || alert.recommendedAction || '';
+
+  return {
+    ...alert,
+    type: alert.type || alert.incident_type,
+    incident_type: alert.incident_type || alert.type,
+    busesList,
+    buses_list: alert.buses_list || busesList.join(','),
+    buses_observed: busesObserved,
+    busesObserved,
+    recommended_action: recommendedAction,
+    recommendedAction
+  };
+};
+
+const INITIAL_ALERTS = MOCK_ALERTS.map(normalizeAlert);
+
+const mergeAlerts = (remoteAlerts = []) => {
+  const normalizedRemote = (remoteAlerts || []).map(normalizeAlert);
+  const seen = new Set(normalizedRemote.map(alert => alert.id));
+  const fallback = INITIAL_ALERTS.filter(alert => !seen.has(alert.id));
+  return [...normalizedRemote, ...fallback];
+};
+
 export const CommandCenterProvider = ({ children }) => {
   const [activePage, setActivePage] = useState('Dashboard');
-  const [alerts, setAlerts] = useState([]);
+  const [alerts, setAlerts] = useState(INITIAL_ALERTS);
   const [metrics, setMetrics] = useState({
     accidentRiskZonesCount: 10,
     activeSafetyAlertsCount: 24,
@@ -109,6 +285,12 @@ export const CommandCenterProvider = ({ children }) => {
   const [simLogs, setSimLogs] = useState([]);
   const [simActiveBuses, setSimActiveBuses] = useState([]);
   const [lastEventId, setLastEventId] = useState('EVT-INITIAL');
+  const [scenarioAnalyzing, setScenarioAnalyzing] = useState(false);
+  const simulationActiveRef = useRef(false);
+
+  useEffect(() => {
+    simulationActiveRef.current = simulationActive;
+  }, [simulationActive]);
 
   // Camera stream feed state
   const [feedData, setFeedData] = useState({
@@ -126,6 +308,45 @@ export const CommandCenterProvider = ({ children }) => {
     imagePath: '/assets/waterlog 1.jpeg'
   });
 
+  // When a preloaded scenario is chosen, show its attached camera frame and
+  // simulate a short edge-AI analysis pass before revealing detections.
+  useEffect(() => {
+    const scenario = SCENARIOS[selectedScenarioKey];
+    if (!scenario || simulationActiveRef.current) return;
+
+    const nowStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+    setScenarioAnalyzing(true);
+    setFeedData({
+      busId: scenario.busId,
+      route: scenario.route,
+      location: scenario.location,
+      coordinates: scenario.coordinates,
+      time: nowStr,
+      detection: 'ANALYSING FRAME',
+      confidence: null,
+      inferenceMs: null,
+      camera: 'FRONT CAMERA',
+      status: 'ANALYSING FRAME',
+      severity: 'PENDING',
+      imagePath: scenario.sampleImage
+    });
+
+    const timer = setTimeout(() => {
+      if (simulationActiveRef.current) return;
+      setFeedData(prev => ({
+        ...prev,
+        detection: `${scenario.incidentType.toUpperCase().replace('_', ' ')} DETECTED`,
+        confidence: scenario.confidence,
+        inferenceMs: scenario.inferenceMs,
+        severity: scenario.severity,
+        status: 'AI ANALYSIS COMPLETE'
+      }));
+      setScenarioAnalyzing(false);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [selectedScenarioKey]);
+
   // Pull all live data from backend SQLite DB
   const refreshDashboardData = async () => {
     try {
@@ -136,12 +357,13 @@ export const CommandCenterProvider = ({ children }) => {
         api.fetchBuses()
       ]);
 
-      setAlerts(alertsData);
+      setAlerts(mergeAlerts(alertsData));
       setMapMarkers(mapMarkersData);
       setMetrics(analyticsData);
       setConnectedBuses(busesData.filter(bus => bus.source === 'connected'));
     } catch (err) {
       console.error('Failed to load dashboard parameters from FastAPI:', err);
+      setAlerts(prev => (prev.length ? prev : INITIAL_ALERTS));
     }
   };
 
@@ -149,7 +371,7 @@ export const CommandCenterProvider = ({ children }) => {
   useEffect(() => {
     const initializeSystem = async () => {
       try {
-        const [health, modelInfo] = await Promise.all([
+        const [health] = await Promise.all([
           api.fetchHealth(),
           api.fetchModelInfo()
         ]);
@@ -193,6 +415,7 @@ export const CommandCenterProvider = ({ children }) => {
         stage: 1,
         name: 'BUS CAMERAS',
         action: async () => {
+          setScenarioAnalyzing(true);
           setFeedData({
             busId: scenario.busId,
             route: scenario.route,
@@ -218,6 +441,7 @@ export const CommandCenterProvider = ({ children }) => {
         stage: 2,
         name: 'EDGE AI DETECTION',
         action: async () => {
+          setScenarioAnalyzing(false);
           setModelAvailable(true);
           setFeedData(prev => ({
             ...prev,
@@ -268,7 +492,7 @@ export const CommandCenterProvider = ({ children }) => {
         name: 'MULTI-BUS VERIFICATION',
         action: async () => {
           // Ingest remaining 3 simulated buses in 100m radius
-          const res = await api.triggerSimulationStep(4, scenarioKey);
+          await api.triggerSimulationStep(4, scenarioKey);
           setSimStep(4);
           setSimActiveBuses(scenario.verificationBuses);
           await refreshDashboardData();
@@ -318,6 +542,7 @@ export const CommandCenterProvider = ({ children }) => {
     }
 
     setSimulationActive(false);
+    setScenarioAnalyzing(false);
   };
 
   const resetSimulation = async () => {
@@ -329,16 +554,22 @@ export const CommandCenterProvider = ({ children }) => {
       setActiveStage(0);
       setSimLogs([]);
       setSimActiveBuses([]);
+      setScenarioAnalyzing(false);
+
+      const scenario = SCENARIOS[selectedScenarioKey] || SCENARIOS.waterlogging;
       setFeedData({
-        busId: 'BUS-204',
-        route: 'Route 21G (Tambaram)',
+        busId: scenario.busId,
+        route: scenario.route,
+        location: scenario.location,
+        coordinates: scenario.coordinates,
         time: '09:44 AM',
-        detection: 'Waterlogging Detected',
+        detection: 'CAMERA FRAME RECEIVED',
         confidence: null,
+        inferenceMs: null,
         camera: 'FRONT CAMERA',
         status: 'DEMO FEED',
-        severity: 'MEDIUM',
-        imagePath: '/data/demo_camera/waterlogging/sample1.jpg'
+        severity: 'LOW',
+        imagePath: scenario.sampleImage
       });
       setSelectedAlert(null);
       await refreshDashboardData();
@@ -367,6 +598,7 @@ export const CommandCenterProvider = ({ children }) => {
         setSelectedScenarioKey,
         activeStage,
         lastEventId,
+        scenarioAnalyzing,
         scenarios: SCENARIOS,
         runFullDemo,
         resetSimulation,

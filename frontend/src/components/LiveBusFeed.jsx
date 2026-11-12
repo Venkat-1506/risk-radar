@@ -1,9 +1,9 @@
 import React from 'react';
 import { useCommandCenter } from '../context/CommandCenterContext';
-import { Camera, Cpu, MapPin, CheckCircle2 } from 'lucide-react';
+import { Camera, Cpu, CheckCircle2, ScanLine, Loader2 } from 'lucide-react';
 
 export default function LiveBusFeed() {
-  const { feedData, modelAvailable, activeStage } = useCommandCenter();
+  const { feedData, activeStage, simulationActive, scenarioAnalyzing } = useCommandCenter();
 
   const getOverlayColor = () => {
     const label = (feedData.detection || '').toLowerCase();
@@ -15,8 +15,19 @@ export default function LiveBusFeed() {
 
   const theme = getOverlayColor();
   const backendBase = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-  const imageUrl = feedData.imagePath ? `${backendBase}${feedData.imagePath}` : null;
-  const isAIDetected = activeStage >= 2 || (feedData.confidence !== null && feedData.confidence !== undefined);
+
+  const resolveImageUrl = (path) => {
+    if (!path) return null;
+    if (/^https?:\/\//i.test(path)) return path;
+    // Local /assets frames ship with the frontend build; /data frames are
+    // served by the FastAPI static mount.
+    if (path.startsWith('/data/')) return `${backendBase}${path}`;
+    return encodeURI(path);
+  };
+
+  const imageUrl = resolveImageUrl(feedData.imagePath);
+  const isAnalyzing = scenarioAnalyzing || (simulationActive && activeStage >= 1 && activeStage < 2);
+  const isAIDetected = !isAnalyzing && (activeStage >= 2 || (feedData.confidence !== null && feedData.confidence !== undefined));
 
   return (
     <div className="card live-feed-card bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl">
@@ -31,29 +42,56 @@ export default function LiveBusFeed() {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[11px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-            CAMERA FRAME RECEIVED
-          </span>
+          {isAnalyzing ? (
+            <span className="bg-sky-500/20 text-sky-300 border border-sky-500/40 text-[11px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+              <ScanLine size={12} className="animate-pulse" />
+              AI ANALYSIS IN PROGRESS
+            </span>
+          ) : (
+            <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[11px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+              CAMERA FRAME RECEIVED
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="camera-screen-container relative overflow-hidden rounded-lg border border-slate-800 bg-slate-950" style={{ minHeight: '280px' }}>
+      <div className="camera-screen-container relative overflow-hidden rounded-lg border border-slate-800 bg-slate-950">
         {/* CCTV Scanlines overlay */}
         <div className="cctv-scanline absolute inset-0 pointer-events-none z-10 opacity-30"></div>
 
         {/* Camera Image Display */}
-        <div className="cctv-video-canvas relative w-full h-[280px]">
-          {imageUrl && (
+        <div className="cctv-video-canvas relative w-full h-full">
+          {imageUrl ? (
             <img
               src={imageUrl}
               alt="Bus Front Camera Feed"
               className="w-full h-full object-cover"
               onError={(e) => {
-                // Fallback to local image path if FastAPI static server is loading
-                e.target.src = feedData.imagePath;
+                e.target.style.display = 'none';
               }}
             />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-slate-600 text-xs font-mono">
+              AWAITING CAMERA FRAME...
+            </div>
+          )}
+
+          <div className="cctv-grid-overlay" />
+
+          {/* Live analysis sweep while the edge model processes the frame */}
+          {isAnalyzing && (
+            <div className="absolute inset-0 z-20 pointer-events-none">
+              <div className="camera-scan-sweep" />
+              <span className="analysis-corner analysis-corner-tl" />
+              <span className="analysis-corner analysis-corner-tr" />
+              <span className="analysis-corner analysis-corner-bl" />
+              <span className="analysis-corner analysis-corner-br" />
+              <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-sky-500/20 border border-sky-400/50 text-sky-300 text-[10px] font-mono font-bold px-2 py-1 rounded">
+                <Loader2 size={11} className="animate-spin" />
+                ANALYSING FRAME...
+              </div>
+            </div>
           )}
 
           {/* AI Bounding Box Overlay */}
